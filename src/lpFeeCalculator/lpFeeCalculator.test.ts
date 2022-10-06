@@ -58,5 +58,11 @@ describe("Realized liquidity provision calculation", function () {
       const realizedLpFeePct = calculateRealizedLpFeePct(rateModel, interval.utilA, interval.utilB, true).toString();
       assert.equal(realizedLpFeePct.toString(), interval.wpy);
     });
+
+    // Test edge case with no change in utilization
+    assert.equal(
+      calculateApyFromUtilization(rateModel, toBNWei("1.00"), toBNWei("1.00")).toString(),
+      toBNWei("1.08").toString()
+    );
   });
 });

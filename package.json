@@ -18,6 +18,7 @@
     "test": "tsdx test",
     "test:watch": "tsdx test --watch",
     "test:e2e": "tsdx test --config jest-e2e-config.json",
+    "test:cov": "tsdx test --coverage",
     "lint": "eslint --fix src",
     "lint-check": "eslint src",
     "prepare": "tsdx build && husky install",

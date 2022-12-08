@@ -87,6 +87,15 @@
     "access": "public"
   },
   "jest": {
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/**/*.ts"
+    ],
+    "coveragePathIgnorePatterns": [
+      "node_modules",
+      ".module.ts",
+      ".e2e.ts",
+      ".mock.ts"
+    ]
   }
 }

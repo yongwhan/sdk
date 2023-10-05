@@ -1,7 +1,10 @@
+import { SpokePool } from "@across-protocol/contracts-v2";
 import dotenv from "dotenv";
-import { RelayFeeCalculator, QueryInterface } from "../src/relayFeeCalculator/relayFeeCalculator";
-import { gasCost, BigNumberish, toBNWei, toBN } from "../src/utils";
-import { assert, expect } from "./utils";
+import { QueryInterface, RelayFeeCalculator } from "../src/relayFeeCalculator/relayFeeCalculator";
+import { BigNumberish, bnUint256Max, gasCost, toBN, toBNWei } from "../src/utils";
+import * as constants from "./constants";
+import { setupHubPool } from "./fixtures/HubPool.Fixture";
+import { Contract, SignerWithAddress, assert, deployExternalAcrossMessageHandler, ethers, expect } from "./utils";
 
 dotenv.config({ path: ".env" });
 
@@ -226,5 +229,49 @@ describe("RelayFeeCalculator", () => {
     assert.equal(client.capitalFeePercent("0", "DAI").toString(), Number.MAX_SAFE_INTEGER.toString());
     assert.equal(client.capitalFeePercent("0", "ZERO_CUTOFF_WBTC").toString(), Number.MAX_SAFE_INTEGER.toString());
     assert.equal(client.capitalFeePercent("0", "WBTC").toString(), Number.MAX_SAFE_INTEGER.toString());
+  });
+  describe("Message Simulation", () => {
+    let externalMessageHandler: Contract;
+    let erc20: Contract;
+    let depositor: SignerWithAddress, dataworker: SignerWithAddress;
+    let spokePool: Contract;
+
+    beforeEach(async () => {
+      ({
+        l1Token_1: erc20,
+        depositor,
+        dataworker,
+        spokePool_1: spokePool,
+      } = await setupHubPool(
+        ethers,
+        constants.MAX_REFUNDS_PER_RELAYER_REFUND_LEAF,
+        constants.MAX_L1_TOKENS_PER_POOL_REBALANCE_LEAF
+      ));
+      const [signer] = await ethers.getSigners();
+      ({ acrossMessageHandler: externalMessageHandler } = await deployExternalAcrossMessageHandler(signer));
+    });
+    it("should be able to send a message directly via the contracts", async () => {
+      const typedSpokePool = spokePool as SpokePool;
+      // Let's first call on the external message handler to make sure it works
+      expect(externalMessageHandler.handleAcrossMessage(erc20.address, "1", true, spokePool.address, "0x")).to.not
+        .throw;
+
+      // We can now call on the spoke pool to ensure that it can send a message to the external message handler
+      await typedSpokePool.fillRelay(
+        depositor.address,
+        dataworker.address,
+        erc20.address,
+        "500000000",
+        "500000000",
+        1,
+        1,
+        0,
+        0,
+        1,
+        "0x",
+        bnUint256Max
+      );
+    });
+    it("should be able to simulate a message from the SpokePool", () => {});
   });
 });

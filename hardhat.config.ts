@@ -7,6 +7,7 @@ import "hardhat-deploy";
 import "hardhat-gas-reporter";
 import { HardhatUserConfig } from "hardhat/config";
 import "solidity-coverage";
+import "./typechain-types";
 
 const solcVersion = "0.8.18";
 

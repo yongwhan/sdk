@@ -15,7 +15,7 @@ import {
   sampleRateModel,
   zeroAddress,
 } from "../constants";
-import { BigNumber, Contract, SignerWithAddress, deposit } from "./index";
+import { BigNumber, Contract, SignerWithAddress, deposit, smock } from "./index";
 export { sinon, winston };
 
 import { AcrossConfigStore } from "@across-protocol/contracts-v2";
@@ -130,6 +130,51 @@ export async function deploySpokePoolWithToken(
     ]);
   }
   return { weth, erc20, spokePool, unwhitelistedErc20, destErc20, deploymentBlock: receipt.blockNumber };
+}
+
+export async function deployExternalAcrossMessageHandler(signer: utils.SignerWithAddress) {
+  const factory = await utils.getContractFactory("ExternalAcrossMessageHandler", signer);
+  const acrossMessageHandler = await factory.deploy();
+  const { blockNumber: deploymentBlock } = await acrossMessageHandler.deployTransaction.wait();
+  const fakeMessageHandler = await smock.fake(
+    [
+      {
+        inputs: [
+          {
+            internalType: "address",
+            name: "tokenSent",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "amount",
+            type: "uint256",
+          },
+          {
+            internalType: "bool",
+            name: "fillCompleted",
+            type: "bool",
+          },
+          {
+            internalType: "address",
+            name: "relayer",
+            type: "address",
+          },
+          {
+            internalType: "bytes",
+            name: "message",
+            type: "bytes",
+          },
+        ],
+        name: "handleAcrossMessage",
+        outputs: [],
+        stateMutability: "view",
+        type: "function",
+      },
+    ],
+    { address: utils.randomAddress() }
+  );
+  return { acrossMessageHandler, deploymentBlock, fakeMessageHandler };
 }
 
 export async function deployConfigStore(

@@ -9,7 +9,7 @@ import { TypedMessage } from "../interfaces/TypedData";
 import { BN, toBN, BigNumberish, bnUint256Max } from "./BigNumberUtils";
 import { ConvertDecimals } from "./FormattingUtils";
 import { Fill } from "../interfaces";
-import { isContractAddress } from "./AddressUtils";
+import { doesAddressHaveContractDeployed } from "./AddressUtils";
 import { getTokenBalance } from "./TokenUtils";
 
 export type Decimalish = string | number | Decimal;
@@ -320,7 +320,7 @@ export async function createUnsignedFillRelayTransactionFromFill(
       throw new Error("Could not simulate message fill. Recipient address or relayer address is not a valid address");
     }
     const [isRecipientAContract, relayerBalanceOfToken] = await Promise.all([
-      isContractAddress(recipientAddress, provider),
+      doesAddressHaveContractDeployed(recipientAddress, provider),
       getTokenBalance(relayerAddress, fillToSimulate.destinationToken, provider),
     ]);
     if (!isRecipientAContract) {
